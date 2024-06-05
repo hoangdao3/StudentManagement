@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const { Student } = require('../models');
 require('dotenv').config();
 
-const studentAuth = async (req, res, next) => {
+const authenticateStudent = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -15,12 +15,12 @@ const studentAuth = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     if (decoded.role !== 'student') {
-      return res.status(401).json({ message: 'Unauthorized' });
+      return res.status(403).json({ message: 'Forbidden: Only students can access this resource' });
     }
 
-    const user = await Student.findByPk(decoded.id);
+    const student = await Student.findByPk(decoded.id);
 
-    if (!user) {
+    if (!student) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
@@ -32,4 +32,4 @@ const studentAuth = async (req, res, next) => {
   }
 };
 
-module.exports = studentAuth;
+module.exports = authenticateStudent;

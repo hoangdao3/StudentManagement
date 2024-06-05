@@ -47,20 +47,16 @@ module.exports = {
 
   down: async (queryInterface, Sequelize) => {
     await queryInterface.sequelize.transaction(async (transaction) => {
-      // Remove the newly created foreign key constraint
       await queryInterface.removeConstraint('Classes', 'Classes_teacher_id_fkey', { transaction });
 
-      // Revert the column rename
       await queryInterface.renameColumn('Teachers', 'id', 'teacher_id', { transaction });
 
-      // Revert the column type and set autoIncrement
       await queryInterface.changeColumn('Teachers', 'teacher_id', {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true,
       }, { transaction });
 
-      // Recreate foreign key constraint
       await queryInterface.addConstraint('Classes', {
         fields: ['teacher_id'],
         type: 'foreign key',

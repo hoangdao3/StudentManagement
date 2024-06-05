@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken');
 const { Teacher, Student } = require('../models');
 require('dotenv').config();
 
-// Middleware to authenticate user
 const authenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 

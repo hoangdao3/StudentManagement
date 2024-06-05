@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 const { Teacher, Student } = require('../models');
 require('dotenv').config();
 
-// Login controller
 const login = async (req, res) => {
   const { email, password, role } = req.body;
 
@@ -38,7 +37,6 @@ const login = async (req, res) => {
   }
 };
 
-// Register controller
 const register = async (req, res) => {
   const { email, password, role } = req.body;
 
@@ -97,16 +95,14 @@ const register = async (req, res) => {
   }
 };
 
-// Logout controller
 const logout = (req, res) => {
   res.clearCookie('token');
   res.json({ message: 'Logout successful' });
 };
 
-// Change password controller
 const changePassword = async (req, res) => {
   const { currentPassword, newPassword, confirmNewPassword } = req.body;
-  const userId = req.id; // Access req.user.id instead of req.id
+  const userId = req.id;
   const role = req.role;
 
   if (!currentPassword || !newPassword || !confirmNewPassword) {

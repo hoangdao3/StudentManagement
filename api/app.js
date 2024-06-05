@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const routes = require('./routes'); // Import router
+const routes = require('./routes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const studentRoutes = require('./routes/teacherRoute')
 dotenv.config();
@@ -15,7 +15,7 @@ app.use(cors({ credentials: true, origin: true }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-app.use('/api', routes); // Use router
+app.use('/api', routes);
 
 app.use('/api/students', studentRoutes);
 app.use('/api/teachers', teacherRoutes);
