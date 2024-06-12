@@ -1,122 +1,107 @@
 const { Teacher, Class, Student } = require('../models');
 
-const getStudentsList = async (req, res) => {
-  const teacherId = req.id;
-
-  try {
-    const teacherClass = await Class.findOne({
-      where: { teacher_id: teacherId },
-      include: Student
-    });
-
-    if (!teacherClass) {
-      return res.status(404).json({ message: 'Class not found for this teacher' });
-    }
-
-    res.json(teacherClass.Students);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-};
-const getGradesSemester2 = async (req, res) => {
+const addStudentToClassByEmail = async (req, res) => {
     try {
-      const grades = await Grade.findAll({
-        where: { semester: 2 },
-        include: Student,
-      });
+      const { email } = req.body;
 
-      const tableData = {};
-
-      grades.forEach(grade => {
-        const studentName = grade.Student.full_name;
-        if (!tableData[studentName]) {
-          tableData[studentName] = {};
-        }
-        tableData[studentName][grade.subject] = grade.grade;
-      });
-
-      const formattedData = [];
-      for (const studentName in tableData) {
-        const studentRow = { 'Student Name': studentName, ...tableData[studentName] };
-        formattedData.push(studentRow);
+      const teacher = await Teacher.findByPk(req.user.teacher_id);
+      if (!teacher) {
+        return res.status(404).json({ message: 'Teacher not found' });
+      }
+      console.log(teacher)
+      const classData = await Class.findOne({ where: { teacher_id: teacher.teacher_id } });
+      if (!classData) {
+        return res.status(404).json({ message: 'Class not found for this teacher' });
       }
 
-      res.json(formattedData);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Internal Server Error' });
-    }
-  };
-  const getAchievements = async (req, res) => {
-    try {
-      const countAbove9 = await Student.count({
-        include: [{
-          model: Grade,
-          where: { semester: 1 },
-        }],
-        having: sequelize.literal('AVG(Grades.grade) > 9.0'),
-      });
-
-      const countBetween8And9 = await Student.count({
-        include: [{
-          model: Grade,
-          where: { semester: 1 },
-        }],
-        having: sequelize.literal('AVG(Grades.grade) >= 8.0 AND AVG(Grades.grade) < 9.0'),
-      });
-
-      const countBetween65And8 = await Student.count({
-        include: [{
-          model: Grade,
-          where: { semester: 1 },
-        }],
-        having: sequelize.literal('AVG(Grades.grade) >= 6.5 AND AVG(Grades.grade) < 8.0'),
-      });
-
-      const countRemaining = await Student.count() - (countAbove9 + countBetween8And9 + countBetween65And8);
-
-      res.json({
-        countAbove9,
-        countBetween8And9,
-        countBetween65And8,
-        countRemaining,
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Internal Server Error' });
-    }
-  };
-  const addStudentToClass = async (req, res) => {
-    const { email, className } = req.body;
-
-    if (!email || !className) {
-      return res.status(400).json({ message: 'Invalid data' });
-    }
-
-    try {
       const student = await Student.findOne({ where: { email } });
       if (!student) {
         return res.status(404).json({ message: 'Student not found' });
       }
 
-      const classInstance = await Class.findOne({ where: { class_name: className } });
-      if (!classInstance) {
-        return res.status(404).json({ message: 'Class not found' });
-      }
-
-      student.class_id = classInstance.class_id;
+      student.class_id = classData.class_id;
       await student.save();
 
-      res.json({ message: 'Student added to class successfully' });
+      res.status(200).json({ message: 'Student added to class successfully', student });
+    } catch (error) {
+      res.status(500).json({ message: 'An error occurred', error });
+    }
+  };
+  const removeStudentFromClassByEmail = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const teacher = await Teacher.findByPk(req.user.teacher_id);
+        if (!teacher) {
+            return res.status(404).json({ message: 'Teacher not found' });
+        }
+        const classData = await Class.findOne({ where: { teacher_id: teacher.teacher_id } });
+        if (!classData) {
+            return res.status(404).json({ message: 'Class not found for this teacher' });
+        }
+
+        const student = await Student.findOne({ where: { email, class_id: classData.class_id } });
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found in this class' });
+        }
+
+        student.class_id = null; // Remove student from class
+        await student.save();
+
+        res.status(200).json({ message: 'Student removed from class successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'An error occurred', error });
+    }
+};
+
+const getStudentsByTeacher = async (req, res) => {
+    try {
+        console.log("-------------")
+      const teacherId = req.user.teacher_id;
+      console.log(teacherId)
+
+      const teacherClass = await Class.findOne({ where: { teacher_id: teacherId } });
+
+      if (!teacherClass) {
+        return res.status(404).json({ message: 'Teacher class not found' });
+      }
+
+      const students = await Student.findAll({ where: { class_id: teacherClass.class_id } });
+
+      res.json({ students });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Internal Server Error' });
     }
   };
+
+  const getGradeTableByTeacher = async (req, res) => {
+    try {
+      const teacherId = req.teacherId;
+
+      // Tìm lớp của giáo viên
+      const teacherClass = await Class.findOne({ where: { teacher_id: teacherId } });
+
+      if (!teacherClass) {
+        return res.status(404).json({ message: 'Teacher class not found' });
+      }
+
+      // Lấy bảng điểm của lớp
+      const gradeTable = await Grade.findAll({
+        where: { class_id: teacherClass.class_id },
+        include: [{ model: Student }]
+      });
+
+      res.json({ gradeTable });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  };
+
 module.exports = {
-  getStudentsList,
-  getGradesSemester2,
-  getAchievements,
-  addStudentToClass
+  addStudentToClassByEmail,
+  getStudentsByTeacher,
+  getGradeTableByTeacher,
+  removeStudentFromClassByEmail
 };

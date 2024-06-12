@@ -1,6 +1,5 @@
-const { Student, Teacher } = require('../models');
+const { Student, Teacher } = require('../api/models');
 
-// Update user information controller
 const updateUserInfo = async (req, res) => {
   const { full_name, address, phone_number, date_of_birth, username } = req.body;
   const userId = req.id;
@@ -33,7 +32,7 @@ const updateUserInfo = async (req, res) => {
 
       user.full_name = full_name;
       user.address = address;
-      user.phone_number = phone_number; // Sử dụng phone_number thay cho parent_phone_number để đồng nhất
+      user.phone_number = phone_number;
       user.date_of_birth = date_of_birth;
       user.username = username;
     }
@@ -45,6 +44,11 @@ const updateUserInfo = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
+};
+
+
+module.exports = {
+  getSemesterTwoGrades,
 };
 
 module.exports = {

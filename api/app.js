@@ -3,8 +3,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const routes = require('./routes');
-const teacherRoutes = require('./routes/teacherRoutes');
-const studentRoutes = require('./routes/teacherRoute')
+// const teacherRoutes = require('./routes/teacherRoute');
+// const teacherRoutes = require('./')
 dotenv.config();
 
 
@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 
 app.use('/api', routes);
 
-app.use('/api/students', studentRoutes);
-app.use('/api/teachers', teacherRoutes);
+// app.use('/api/students', studentRoutes);
+// app.use('/api/teachers', teacherRoutes);
 const port = 3002;
 app.listen(port, () => console.log(`Server ready at http://localhost:${port}`));

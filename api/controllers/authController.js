@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { Teacher, Student } = require('../models');
+const { Teacher, Student, Class } = require('../models');
 require('dotenv').config();
 
 const login = async (req, res) => {
@@ -61,6 +61,11 @@ const register = async (req, res) => {
         password: password,
         email: email
       });
+      await Class.create({
+        class_name: `Class of ${user.full_name}`,
+        teacher_id: user.teacher_id
+      });
+
     } else if (role === 'student') {
       const existingStudent = await Student.findOne({ where: { email } });
       if (existingStudent) {
